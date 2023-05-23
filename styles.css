@@ -1,0 +1,82 @@
+body {
+    padding: 40px;
+    background-color: black;
+}
+
+* {
+    font-family: 'Source Code Pro', monospace;
+}
+
+#calc-container {
+    background-color: gray;
+    flex-direction: column;
+    display: flex;
+    height: 60vh;
+    width: 40vh;
+    margin: auto;
+    margin-top: 7vh;
+    padding: 0.2%;
+    border-radius: 10px;
+}
+
+#display-container {
+    background-color:black;
+    display: flex;
+    flex: 1;
+    border-radius: 5px;
+    margin: 1%;
+    min-height: 10%;
+    flex-direction:column;
+    padding: 4%;
+}
+
+#calculation {
+    background-color: black;
+    display: flex;
+    flex: 50%;
+    color: white;
+    justify-content: end;
+    align-items: center;
+    font-size: 25px;
+
+}
+
+#result {
+    background-color: black;
+    display: flex;
+    flex: 50%;
+    color: white;
+    justify-content: end;
+    align-items: center;
+    font-size: 30px;
+
+}
+
+#button-container {
+    display: flex;
+    flex-direction: row-reverse;
+    flex-wrap: wrap;
+    flex:5;
+    min-height:80%;
+    margin: auto;
+    border-radius: 10px;
+}
+
+.button {
+    background-color: darkgray;
+    flex: 20%;
+    min-width:20%;
+    margin:1%;
+    border-radius: 5px;
+    border-width: 0px;
+    font-size: 17px;
+    color: white;
+}
+#zero {
+    flex: 45%;
+    min-width:45%;
+}
+#multiply, #deduct, #add, #equal {
+    background-color: orange;
+}
+
