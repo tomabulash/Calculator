@@ -1,5 +1,5 @@
 body {
-    padding: 40px;
+    
     background-color: black;
 }
 
@@ -14,7 +14,7 @@ body {
     height: 60vh;
     width: 40vh;
     margin: auto;
-    margin-top: 7vh;
+    margin-top: 10vh;
     padding: 0.2%;
     border-radius: 10px;
 }
@@ -37,7 +37,8 @@ body {
     color: white;
     justify-content: end;
     align-items: center;
-    font-size: 25px;
+    font-size: 3.15vh;
+    
 
 }
 
@@ -48,7 +49,7 @@ body {
     color: white;
     justify-content: end;
     align-items: center;
-    font-size: 30px;
+    font-size: 3.75vh;
 
 }
 
@@ -69,14 +70,26 @@ body {
     margin:1%;
     border-radius: 5px;
     border-width: 0px;
-    font-size: 17px;
+    font-size: 2.2vh;
     color: white;
 }
 #zero {
     flex: 45%;
     min-width:45%;
 }
-#multiply, #deduct, #add, #equal {
+#multiply, #deduct, #add, #equal, #devide {
     background-color: orange;
 }
 
+#page-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+}
+
+#footer {
+    margin-top: 8vh;
+    font-size: 2.2vh;
+    color: white;
+}

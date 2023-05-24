@@ -1,19 +1,24 @@
-// parseInt() for string to number conversion
 const buttonContainer = document.getElementById('button-container');
 const calculation = document.getElementById('calculation');
 const resultDisplay = document.getElementById('result');
 calculation.textContent = '';
+let minusExist = false;
+let operator = '';
+let dotExist = false;
+let result = 0;
 
 let buttons = [];
-const id = ['devide', 'module', 'plusMinus', 'clear', 'multiply', 
+const id = ['devide', 'plusMinus', 'DEL', 'clear', 'multiply', 
             'nine', 'eight', 'seven', 'deduct', 'six', 'five', 'four', 'add', 
             'three', 'two', 'one', 'equal', 'dot', 'zero'];
-const content = ['/', '%', '+/-', 'C', '*', '9', '8',
+const content = ['/', '+/-', 'DEL', 'C', '*', '9', '8',
                  '7', '-', '6', '5', '4', '+', '3', 
                  '2', '1', '=', '.', '0'];
 const firstMust = ['plusMinus', 'clear', 'nine', 'eight', 'seven', 'six', 'five',
                 'four', 'three', 'two', 'one', 'zero', 'dot'];
-const operators = ['devide', 'multiply', 'deduct', 'add'];
+const operators = ['devide', 'multiply', 'deduct', 'add', '/', '*', '-', '+'];
+const firstNum = [];
+const secondNum = [];
 
 function makeButtons() {
     for(let i=0; i<19; i++) {
@@ -22,100 +27,149 @@ function makeButtons() {
         buttons[i].id = id[i];
         buttons[i].textContent = content[i];
         buttonContainer.appendChild(buttons[i]);
-        
     }
 }
 makeButtons();
 
-// calculation :
-let minus = false;
-let firstNum = 0;
-let operator = '';
-let secondNum = 0;
-let dot = false;
-let secondNumStart = 0;
-let result = 0;
+function printCalculation(buttonChar) {
+    if(operator == '' && secondNum[0] == undefined) { 
+        if(buttonChar == 'DEL') firstNum.pop();
+        if(buttonChar != '+/-' && buttonChar != 'DEL') firstNum.push(buttonChar);
+        calculation.textContent = (firstNum.join('').length >= 19) ? firstNum.join('').slice(-19) : firstNum.join('');
+
+    } else if(operators.includes(buttonChar)) {
+        calculation.textContent = (firstNum.join('').length >= 18) ? firstNum.join('').slice(-18) + buttonChar : firstNum.join('') + buttonChar;
+
+    } else if(operator != '' && buttonChar == 'DEL' && secondNum[0] == undefined) {
+        operator = '';
+        calculation.textContent = (firstNum.join('').length >= 19) ? firstNum.join('').slice(-19) : firstNum.join('');
+
+    } else if (buttonChar == 'DEL' && secondNum[0] != undefined) {
+        secondNum.pop();
+        
+        if(firstNum.join('').length + 1 + secondNum.join('').length >= 19) {
+            const newArr = firstNum.concat(operator, secondNum);
+            calculation.textContent = newArr.join('').slice(-19);
+        } else {
+            calculation.textContent = firstNum.join('') + operator + secondNum.join('');
+        }
+    } else {
+        if(buttonChar != '+/-') secondNum.push(buttonChar);
+
+        if(firstNum.join('').length + 1 + secondNum.join('').length >= 19) {
+            const newArr = firstNum.concat(operator, secondNum);
+            calculation.textContent = newArr.join('').slice(-19);
+        } else {
+            calculation.textContent = firstNum.join('') + operator + secondNum.join('');
+        }
+    }
+}  
+
 
 function calculate() {
-    if(firstNum<0) secondNumStart--;
-    secondNum += 2;
-    secondNum = parseFloat(calculation.textContent.substring(secondNumStart));
- 
+
+    let first = parseFloat(firstNum.join(''));
+    let second = parseFloat(secondNum.join(''));
+    let result = 0; 
+     
+    if(operator == '+') result = first + second;
+    else if(operator == '-') result = first - second;
+    else if(operator == '/') result = first / second;
+    else if(operator == '*') result = first * second;
     
-    if(operator == 'add') return firstNum + secondNum;
-    if(operator == 'deduct') return firstNum - secondNum;
-    if(operator == 'devide') return firstNum / secondNum;
-    if(operator == 'multiply') return firstNum * secondNum;
+
+    resultDisplay.textContent = (result.toString().length >= 14) ? result.toPrecision(10) : result;
+    
+    firstNum.splice(0, firstNum.length);
+    for(const obj of Array.from(resultDisplay.textContent)) {
+        firstNum.push(obj);
+    }
+    operator = '';
+    secondNum.splice(0, secondNum.length);
+    return 0;
+
 }
 
 function clickButton(e) {
     
     const buttonId = e.target.id;
+    const buttonChar = e.target.textContent;
 
-    if(calculation.textContent == '') {
+    if(firstNum[0] == undefined) {
         if (!(firstMust.includes(buttonId))) return 0;
         if(buttonId == 'dot') {
-            dot = true;
-            calculation.textContent = '0.';
+            dotExist = true;
+            firstNum.push('0');
+            printCalculation(buttonChar);
+            return 0;
         }
     }
-
-    if(buttonId == 'dot' && dot == true) return 0;
-    if(buttonId == 'dot') dot = true;
+ 
+    if(buttonId == 'dot') {
+        if(operator != '' && secondNum[0] ==undefined) {
+            dotExist = true;
+            secondNum.push('0');
+            printCalculation(buttonChar);
+            return 0;
+        }
+        if (dotExist == true) return 0;
+        dotExist = true;
+        printCalculation(buttonChar);
+        return 0;
+    }
 
     if(buttonId == 'plusMinus') {
-        if (operator != '') return 0;
-        if (minus == false) {
-            minus = true;
-            return calculation.textContent = '-' + calculation.textContent;
+        if (operator != '') {
+            if(minusExist == false) {
+                minusExist = true;
+                secondNum.unshift('-');
+                printCalculation(buttonChar);
+                return 0; 
+            } else {
+                minusExist = false;
+                secondNum.shift();
+                printCalculation(buttonChar);
+                return 0;
+            }
         }
-        minus = false;
-        return calculation.textContent = calculation.textContent.slice(1);
+        if (minusExist == false) { //if minus don't exist, add it
+            minusExist = true;
+            firstNum.unshift('-');
+            printCalculation(buttonChar);
+            return 0;
+        }
+        minusExist = false; //if minus exist, remove it
+        firstNum.shift();
+        printCalculation(buttonChar);
+        return 0;
     }
 
-    //length way is not good
     if(operators.includes(buttonId)) {
-        if(operator == '' && resultDisplay.textContent == '') {
-            firstNum = parseFloat(calculation.textContent);
-            operator = buttonId;
-            dot = false;
-            secondNumStart = calculation.textContent.length;
-            console.log(secondNum);
-        } else if(operator != '') {
-            
-            resultDisplay.textContent = calculate();
-            console.log('go to location ' + secondNumStart + 'in string ' + calculation.textContent);
-            console.log(firstNum + operator + secondNum);
-            operator = buttonId;
-            firstNum = parseFloat(resultDisplay.textContent);
-            calculation.textContent = firstNum + e.target.textContent;
-            secondNumStart = calculation.textContent.length;
-            return 0;
-        } 
+        if(operator != '') calculate();
+        operator = buttonChar;
+        dotExist = false;
+        printCalculation(buttonChar);
+        return 0;
     }
 
     if(buttonId == 'equal') {
-        secondNum = parseFloat(calculation.textContent.substring(secondNumStart));
-        resultDisplay.textContent = calculate();
-        firstNum = resultDisplay.textContent;
-        operator = '';
-        secondNum = 0;
+        calculate();
         return 0;
     }
-    
 
     if(buttonId == 'clear') {
-        firstNum = 0;
+        firstNum.splice(0, firstNum.length);
         operator = '';
-        secondNum = 0;
-        dot = false;
-        minus = false;
+        secondNum.splice(0, secondNum.length);
+        dotExist = false;
+        minusExist = false;
         calculation.textContent = '';
         resultDisplay.textContent = '';
         return 0;
     }
-    calculation.textContent += e.target.textContent;
-    
+
+    printCalculation(buttonChar);
+    return 0; 
 }
 
 // interface effects :
@@ -143,4 +197,4 @@ function up(e) {
 buttonContainer.addEventListener('mouseover', hoverOn);
 buttonContainer.addEventListener('mouseleave', hoverOff);
 buttonContainer.addEventListener('mousedown', down);
-buttonContainer.addEventListener('mouseup', up);
+buttonContainer.addEventListener('mouseup', up)
