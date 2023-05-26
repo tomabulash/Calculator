@@ -29,7 +29,7 @@ let debugList = {
 const debugListProxy = new Proxy(debugList, {
     set: function (target, key, value) {
         if(key == 'click') {
-            debugClick.textContent = (`${key}: ${value}...` );
+            debugClick.textContent = (`${key}: ${value}` );
         } else {
             debugDisplay.textContent = (` ${key}: ${value}`);
         }
@@ -42,6 +42,7 @@ function debugToggle(e) {
     if(debug.style.display === 'flex') {
         debug.style.display = 'none';
         e.target.textContent = 'debug: off';
+    
     } else {
         debug.style.display = 'flex';
         e.target.textContent = 'debug: on';
@@ -63,15 +64,18 @@ let exist = {
     operator: false,
     secondNum: false,
     result: false,
-    minus: false,
     firstOnlyZeroDot: false,
     secondOnlyZeroDot: false,
     firstOnlyOneChar: false,
     secondOnlyOneChar: false,
+    firstOnlyMinus: false,
+    secondOnlyMinus: false, 
     firstDotIsLast: false,
     secondDotIsLast: false,
     firstHasDot: false,
     secondHasDot: false,
+    firstHasMinus: false,
+    secondHasMinus: false,
     check() {
         this.firstNum = (firstNum[0] == undefined) ? false : true;
         this.operator = (operator == '') ? false : true;
@@ -94,6 +98,14 @@ let exist = {
         this.firstHasDot = (firstNum.includes('.')) ? true : false;
         this.secondHasDot = (secondNum.includes('.')) ? true : false;
     },
+    hasMinus() {
+        this.firstHasMinus = (firstNum.includes('-')) ? true : false;
+        this.secondHasMinus = (secondNum.includes('-')) ? true : false;
+    },
+    onlyMinus() {
+        this.firstOnlyMinus = (firstNum[0] == '-' && firstNum[1] == undefined) ? true : false;
+        this.secondOnlyMinus = (secondNum[0] == '-' && secondNum[1] == undefined) ? true : false;
+    }, 
     reset() {
         for(key in this) {
             if (typeof this[key] !== 'function') this[key] = false;
@@ -274,68 +286,61 @@ function numClick(buttonChar) {
 
 function plusMinusClick() {
     exist.check(); 
+    exist.hasMinus();
 
-    if(!exist.firstNum && !exist.operator && !exist.secondNum) {
+    if(!exist.firstHasMinus && !exist.firstNum && !exist.operator && !exist.secondNum) {
         //before[], after[-]
         debugListProxy.click = 3.1;
         firstNum.unshift('-');
-        exist.minus = true;
         display(firstNum);
         return 3.1;
 
-    } else if(!exist.firstNum && exist.minus && !exist.operator && !exist.secondNum ) {
+    } else if(exist.firstHasMinus && !exist.firstNum && !exist.operator && !exist.secondNum ) {
         //before[-], after[]
         debugListProxy.click = 3.2;
         firstNum.shift('');
-        exist.minus = false;
         display(firstNum);
         return 3.2;
 
-    } else if(exist.firstNum && !exist.minus && !exist.operator && !exist.secondNum) {
+    } else if(!exist.firstHasMinus && exist.firstNum && !exist.operator && !exist.secondNum) {
         //before[123], after[-123]
         debugListProxy.click = 3.3;
         firstNum.unshift('-');
-        exist.minus = true;
         display(firstNum);
         return 3.3;
 
-    } else if(exist.firstNum && exist.minus && !exist.operator && !exist.secondNum ) {
+    } else if(exist.firstHasMinus && exist.firstNum && !exist.operator && !exist.secondNum ) {
         //before[-123], after[123]
         debugListProxy.click = 3.4;
         firstNum.shift('');
-        exist.minus = false;
         display(firstNum);
         return 3.4;
 
-    } else if(exist.firstNum && exist.operator && !exist.secondNum) {
+    } else if(!exist.secondHasMinus && exist.firstNum && exist.operator && !exist.secondNum) {
         //before[123+], after[123+-] 
         debugListProxy.click = 3.5;
         secondNum.unshift('-');
-        exist.minus = true;
         display(firstNum, operator, secondNum);
         return 3.5;
 
-    } else if(exist.firstNum && exist.minus && exist.operator && !exist.secondNum) {
+    } else if(exist.secondHasMinus && exist.firstNum && exist.operator && !exist.secondNum) {
         //before[123+-], after[123+]
         debugListProxy.click = 3.6;
         secondNum.shift('');
-        exist.minus = false;
         display(firstNum, operator);
         return 3.6;
 
-    } else if(exist.firstNum && exist.operator && !exist.minus && exist.secondNum) {
+    } else if(!exist.secondHasMinus && exist.firstNum && exist.operator && exist.secondNum) {
         //before[123+456], after[123+-456]
         debugListProxy.click = 3.7;
         secondNum.unshift('-');
-        exist.minus = true;
         display(firstNum, operator, secondNum);
         return 3.7;
     
-    } else if(exist.firstNum && exist.operator && exist.minus && exist.secondNum) {
+    } else if(exist.secondHasMinus && exist.firstNum && exist.operator && exist.secondNum) {
         //before[123+-456], after[123+456]
         debugListProxy.click = 3.8;
         secondNum.shift('');
-        exist.minus = false;
         display(firstNum, operator, secondNum);
         return 3.8;
 
@@ -345,6 +350,7 @@ function plusMinusClick() {
 function dotClick(buttonChar) {
     exist.check();
     exist.hasDot();
+    exist.onlyMinus();
 
     if(!exist.firstNum && !exist.operator && !exist.secondNum) {
         //before[], after[0.]
@@ -353,6 +359,22 @@ function dotClick(buttonChar) {
         firstNum.push('.');
         display(firstNum);
         return 4.1;
+
+    } else if(exist.firstOnlyMinus && !exist.operator && !exist.secondNum) { 
+        //before[-], after[-0.] 
+        debugListProxy.click = 4.7;
+        firstNum.push('0');
+        firstNum.push('.');
+        display(firstNum);
+        return 4.7;
+
+    } else if(exist.firstNum && exist.operator && exist.secondOnlyMinus) { 
+        //before[123+-], after[123+-0.] 
+        debugListProxy.click = 4.8;
+        secondNum.push('0');
+        secondNum.push('.');
+        display(firstNum, operator, secondNum);
+        return 4.8;
 
     } else if(exist.firstNum && exist.firstHasDot && !exist.operator) {
         //before[0.], after[0.] //before[1.23], after[1.23]
@@ -379,7 +401,7 @@ function dotClick(buttonChar) {
         debugListProxy.click = 4.5;
         return 4.5;
 
-    } else if(exist.firstNum && exist.operator && exist.secondNum && !exist.secondHasDot ) { //here
+    } else if(exist.firstNum && exist.operator && exist.secondNum && !exist.secondHasDot ) { 
         //before[0.123+456], after[0.123+456.] 
         debugListProxy.click = 4.6;
         secondNum.push(buttonChar);
@@ -394,6 +416,7 @@ function operatorClick(buttonChar) {
     exist.checkOnlyZeroDot();
     exist.checkOnlyOneChar();
     exist.checkDotIsLast();
+    exist.onlyMinus();
 
     if(!exist.firstNum) {
         //before[], after[]
@@ -405,7 +428,7 @@ function operatorClick(buttonChar) {
         debugListProxy.click = 5.2;
         return 5.2;
 
-    } else if(exist.firstNum && !exist.operator) { 
+    } else if(exist.firstNum && !exist.operator && !exist.firstOnlyMinus) { 
         //before[123], after[123+]
         debugListProxy.click = 5.3;
         operator = buttonChar;
@@ -416,11 +439,16 @@ function operatorClick(buttonChar) {
         //before[123+], after[123+]
         debugListProxy.click = 5.4;
         return 5.4;
-
+        
     } else if(exist.firstNum && exist.operator && exist.secondDotIsLast) {
         //before[123+0.], after[123+0.]
         debugListProxy.click = 5.5;
         return 5.5;
+
+    } else if(exist.firstNum && exist.operator && exist.secondOnlyMinus) {
+        //before[123+-], after[123+-]
+        debugListProxy.click = 5.8;
+        return 5.8;
 
     } else if(exist.firstNum && exist.operator && exist.secondNum) { 
         //before[123+456], after[result+][result] 
@@ -448,6 +476,7 @@ function equalClick() {
     exist.checkOnlyZeroDot();
     exist.checkOnlyOneChar();
     exist.checkDotIsLast();
+    exist.onlyMinus();
 
     if(!exist.firstNum) {
         //before[], after[]
@@ -458,6 +487,11 @@ function equalClick() {
         //before[0.], after[0.] //before[123.], after[123.]
         debugListProxy.click = 6.2;
         return 6.2;
+
+    } else if(exist.firstOnlyMinus && !exist.operator) {
+        //before[-], after[-]
+        debugListProxy.click = 6.8;
+        return 6.8;
 
     } else if(exist.firstNum && !exist.operator) { 
         //before[123], after[123]
@@ -473,6 +507,11 @@ function equalClick() {
         //before[123+0.], after[123+0.]
         debugListProxy.click = 6.5;
         return 6.5;
+
+    } else if(exist.firstNum && exist.operator && exist.secondOnlyMinus) {
+        //before[123+-], after[123+-]
+        debugListProxy.click = 6.9;
+        return 6.9;
 
     } else if(exist.firstNum && exist.operator && exist.secondNum) { 
         //before[123+456], after[123+456][result]

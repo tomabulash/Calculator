@@ -92,23 +92,27 @@ body {
 }
 
 #footer {
-    margin-top: 5vh;
-    font-size: 2.2vh;
-    color: white;
-    filter: brightness(0.6);
+    margin-top: 3vh;
+    font-size: 1.8vh;
+    color: #336666;
     text-align: center;
 }
 
 #debug-button {
-    margin-top: 5vh;
-    background-color: black;
-    border-color:gray;
+    margin-top: 3vh; 
+    border-color: #336666;
+    border-style: solid;
     border-radius: 5px;
-    color: gray;
+    background-color: black;
+    color: #336666;
+    padding: 2vh;
+    border-width: 1px;
 }
 
 #debug {
-    margin-top:1vh;
+    margin-top:2vh;
     color: gray; 
     display: none;
+    font-size: 1.6vh;
+    color: #336666;  
 }
