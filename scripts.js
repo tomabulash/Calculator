@@ -1,6 +1,9 @@
 const debug = document.getElementById('debug');
 const debugClick = document.getElementById('debug-click');
 const debugDisplay = document.getElementById('debug-display');
+const debugFirstLength = document.getElementById('debug-firstLength');
+const debugSecondLength = document.getElementById('debug-secondLength');
+const debugBothLength = document.getElementById('debug-bothLength');
 const buttonContainer = document.getElementById('button-container');
 const resultDisplay = document.getElementById('result');
 const calcSpanOne = document.getElementById('calc-one');
@@ -24,15 +27,24 @@ const secondNum = [];
 let debugList = {
     click: 0,
     display: 0,
+    firstLength: 0,
+    secondLength: 0,
 }
 
 const debugListProxy = new Proxy(debugList, {
     set: function (target, key, value) {
         if(key == 'click') {
             debugClick.textContent = (`${key}: ${value}` );
-        } else {
+        } else if (key == 'display') {
             debugDisplay.textContent = (` ${key}: ${value}`);
+        } else if (key == 'firstLength') {
+            debugFirstLength.textContent = (` ${key}: ${value}`);
+        } else if(key == 'secondLength') {
+            debugSecondLength.textContent = (` ${key}: ${value}`);
+        } else if(key == 'bothLength') {
+            debugBothLength.textContent = (` ${key}: ${value}`);
         }
+        
         target[key] = value;
         return true;
     }
@@ -76,6 +88,10 @@ let exist = {
     secondHasDot: false,
     firstHasMinus: false,
     secondHasMinus: false,
+    firstOnlyZero: false,
+    secondOnlyZero: false,
+    error: false,
+    secondOnlyZeroDotZero: false,
     check() {
         this.firstNum = (firstNum[0] == undefined) ? false : true;
         this.operator = (operator == '') ? false : true;
@@ -106,6 +122,25 @@ let exist = {
         this.firstOnlyMinus = (firstNum[0] == '-' && firstNum[1] == undefined) ? true : false;
         this.secondOnlyMinus = (secondNum[0] == '-' && secondNum[1] == undefined) ? true : false;
     }, 
+    onlyZero() {
+        if((firstNum[0] == '0' && firstNum[1] == undefined) || (firstNum[0] == '-' && firstNum[1] == '0' && firstNum[2] == undefined)) {
+            this.firstOnlyZero = true;
+        } else {
+            this.firstOnlyZero = false;
+        }
+        if((secondNum[0] == '0' && secondNum[1] == undefined) || (secondNum[0] == '-' && secondNum[1] == '0' && secondNum[2] == undefined)) {
+            this.secondOnlyZero = true;
+        } else {
+            this.secondOnlyZero = false;
+        }
+    },
+    onlyZeroDotZero() {
+        this.secondOnlyZeroDotZero = secondNum.some(x => x != '0' && x != '.' && x != '-') ? false : true; 
+    },
+    errorCheck() {
+        this.error = (resultDisplay.textContent == 'Impossible!') ? true : false;
+
+    },
     reset() {
         for(key in this) {
             if (typeof this[key] !== 'function') this[key] = false;
@@ -114,7 +149,6 @@ let exist = {
 }
 
 function display(arr, opr, arr2) {
-    
     let str = '';
     let str2 = '';
 
@@ -132,36 +166,65 @@ function display(arr, opr, arr2) {
     } else if(arr && opr && !arr2) {
         //display arr and opr
         debugListProxy.display = 2;
-        calcSpanOne.textContent = (str.length >= 18) ? str.slice(-19) : str;
+        calcSpanOne.textContent = (str.length > 18) ? str.slice(-18) : str;
         calcSpanTwo.textContent = opr;
         calcSpanThree.textContent = '';
         return 0;
 
     } else if(arr && opr && arr2) {
         //display arr and opr and arr2
-        debugListProxy.display = 3;
-        if(str2.length >= 19) {
-            //before 123+7890[12345678901234567890], after [12345678901234567890]
+
+        if(str.length + 1 + str2.length <= 19) {
+            debugListProxy.display = 3.5;
+            calcSpanOne.textContent = str;
+            calcSpanTwo.textContent = opr;
+            calcSpanThree.textContent = str2;
+            return 0; 
+        }
+
+        if(str2.length > 19) {
             debugListProxy.display = 3.1;
             calcSpanOne.textContent = '';
             calcSpanTwo.textContent = '';
             calcSpanThree.textContent = str2.slice(-19);
             return 0;
-        } else if(str2.length >= 18) {
-            //before 123[+1234567890123456789], after [+1234567890123456789]
+        }
+
+        if(str2.length == 19) {
             debugListProxy.display = 3.2;
-            calcSpanOne.textContent = ''
-            calcSpanTwo.textContent = opr;
-            calcSpanThree.textContent = str2.slice(-18);
+            calcSpanOne.textContent = '';
+            calcSpanTwo.textContent = '';
+            calcSpanThree.textContent = str2;
             return 0;
-        }else {
-            //before 123[456+7890123456789012]
+        }
+
+        if(str2.length == 18) {
             debugListProxy.display = 3.3;
-            calcSpanOne.textContent = str.slice(-(18-str2.length));
+            calcSpanOne.textContent = '';
             calcSpanTwo.textContent = opr;
             calcSpanThree.textContent = str2;
             return 0;
         }
+
+        if(str2.length < 18) {
+            debugListProxy.display = 3.4;
+            debugListProxy.firstLength = str.length;
+            debugListProxy.secondLength = str2.length;
+            let i=0;
+
+            for( i=1; i<str.length; i++) {
+                if(str.slice(-i).length + 1 + str2.length == 19) break;
+            }
+            calcSpanOne.textContent = str.slice(-i); //=19-2-17 0 is error, 1 is good. when str.length = 15 && str2.length == 17
+            calcSpanTwo.textContent = opr;// 1
+            calcSpanThree.textContent = str2;//17
+
+            debugListProxy.bothLength = calcSpanOne.textContent.length+calcSpanTwo.textContent.length+calcSpanThree.textContent.length;
+            return 0;
+        }
+
+        
+
 
     } else if(!arr && !opr && !arr2) {
         //display empty
@@ -169,6 +232,7 @@ function display(arr, opr, arr2) {
         calcSpanOne.textContent = '';
         calcSpanTwo.textContent = '';
         calcSpanThree.textContent = '';
+        resultDisplay.textContent = '';
         return;
     }
 }
@@ -182,8 +246,17 @@ function calculate() {
     else if(operator == '-') result = first - second;
     else if(operator == '/') result = first / second;
     else if(operator == '*') result = first * second;
-    
-    return (result.toString().length >= 14) ? result.toPrecision(10) : result;
+
+    if (result === Infinity) return 'Too big...';
+    if (result === -Infinity) return 'Too small...';
+
+    if(result.toString().length <= 15) {
+        return result;
+    } else {
+        for(let i=10; i>0; i--) {
+            if(result.toPrecision(i).length <= 15) return result.toPrecision(i);
+        }
+    }
 }
 
 function delClick() {
@@ -252,6 +325,12 @@ function delClick() {
 
 function numClick(buttonChar) {
     exist.check(); 
+    exist.onlyZero();
+    exist.checkDotIsLast();
+    exist.checkOnlyZeroDot();
+
+    
+    debugListProxy.click = 2.22;    
 
     if(!exist.firstNum && !exist.operator && !exist.secondNum) {
         //before[], after[1]
@@ -259,6 +338,10 @@ function numClick(buttonChar) {
         firstNum.push(buttonChar);
         display(firstNum);
         return 2.1;
+    
+    } else if(exist.firstOnlyZero && !exist.operator) {
+        //before[0], after[0]
+        return 2.5;
 
     } else if(exist.firstNum && !exist.operator && !exist.secondNum) {
         //before[123], after[1234]
@@ -273,6 +356,10 @@ function numClick(buttonChar) {
         secondNum.push(buttonChar);
         display(firstNum, operator, secondNum);
         return 2.3;
+
+    } else if(exist.operator && exist.secondOnlyZero) {
+        //before[0], after[0]
+        return 2.6;
 
     } else if(exist.firstNum && exist.operator && exist.secondNum) {
         //before[123+456], after[123+4567]
@@ -417,7 +504,9 @@ function operatorClick(buttonChar) {
     exist.checkOnlyOneChar();
     exist.checkDotIsLast();
     exist.onlyMinus();
-
+    exist.onlyZero();
+    exist.onlyZeroDotZero();
+    
     if(!exist.firstNum) {
         //before[], after[]
         debugListProxy.click = 5.1;
@@ -450,17 +539,26 @@ function operatorClick(buttonChar) {
         debugListProxy.click = 5.8;
         return 5.8;
 
+    } else if(operator == '/' && exist.secondOnlyZeroDotZero) {
+        //before[123/0], after[123/0] 
+        debugListProxy.click = 5.9;
+        resultDisplay.textContent = 'Impossible!';
+        return 5.9;
+        
+
     } else if(exist.firstNum && exist.operator && exist.secondNum) { 
         //before[123+456], after[result+][result] 
         debugListProxy.click = 5.6;
         resultDisplay.textContent = calculate();
-        firstNum.splice(0, firstNum.length);
-        for(const obj of Array.from(resultDisplay.textContent)) {
-            firstNum.push(obj);
+        if(resultDisplay.textContent != 'Too big...' && resultDisplay.textContent != 'Too small...') {
+            firstNum.splice(0, firstNum.length);
+            for(const obj of Array.from(resultDisplay.textContent)) {
+                firstNum.push(obj);
+            }
+            operator = buttonChar;
+            secondNum.splice(0, secondNum.length);
+            display(firstNum, operator);
         }
-        operator = buttonChar;
-        secondNum.splice(0, secondNum.length);
-        display(firstNum, operator);
         return 5.6;
     
     } else if(exist.firstNum && exist.operator && exist.result && !exist.secondNum) { 
@@ -477,11 +575,19 @@ function equalClick() {
     exist.checkOnlyOneChar();
     exist.checkDotIsLast();
     exist.onlyMinus();
+    exist.onlyZero();
+    exist.onlyZeroDotZero();
 
     if(!exist.firstNum) {
         //before[], after[]
         debugListProxy.click = 6.1;
         return 6.1;
+
+    } else if(operator == '/' && exist.secondOnlyZeroDotZero) {
+        //before[123/0], after[123/0] 
+        debugListProxy.click = 6.10;
+        resultDisplay.textContent = 'Impossible!';
+        return 6.10;
 
     } else if(exist.firstDotIsLast && !exist.operator) {
         //before[0.], after[0.] //before[123.], after[123.]
@@ -515,14 +621,16 @@ function equalClick() {
 
     } else if(exist.firstNum && exist.operator && exist.secondNum) { 
         //before[123+456], after[123+456][result]
-        debugListProxy.click = 6.6; 
+        debugListProxy.click = 6.6;
         resultDisplay.textContent = calculate();
-        firstNum.splice(0, firstNum.length);
-        for(const obj of Array.from(resultDisplay.textContent)) {
-            firstNum.push(obj);
+        if(resultDisplay.textContent != 'Too big...' && resultDisplay.textContent != 'Too small...') {
+            firstNum.splice(0, firstNum.length);
+            for(const obj of Array.from(resultDisplay.textContent)) {
+                firstNum.push(obj);
+            }
+            operator = '';
+            secondNum.splice(0, secondNum.length);
         }
-        operator = '';
-        secondNum.splice(0, secondNum.length);
         return 6.6;
     
     } else if(exist.firstNum && exist.operator && exist.result && !exist.secondNum) { 
@@ -549,13 +657,13 @@ function clearClick() {
 function clickButton(e) {   
     const buttonChar = e.target.textContent;
 
-    if(operators.includes(buttonChar)) return operatorClick(buttonChar);
-    if(numbers.includes(buttonChar)) return numClick(buttonChar);
-    if(buttonChar == 'DEL') return delClick();
-    if(buttonChar == 'C') return clearClick();
-    if(buttonChar == '+/-') return plusMinusClick();
-    if(buttonChar == '=') return equalClick();
-    if(buttonChar == '.') return dotClick(buttonChar);
+        if(operators.includes(buttonChar)) return operatorClick(buttonChar);
+        if(numbers.includes(buttonChar)) return numClick(buttonChar);
+        if(buttonChar == 'DEL') return delClick();
+        if(buttonChar == 'C') return clearClick();
+        if(buttonChar == '+/-') return plusMinusClick();
+        if(buttonChar == '=') return equalClick();
+        if(buttonChar == '.') return dotClick(buttonChar);
 }
 
 //interface effects :
@@ -582,6 +690,21 @@ function up(e) {
 }
 
 makeButtons();
+
+/* for debug purpose
+calcSpanOne.textContent = 'enter first num';
+for(const obj of Array.from(calcSpanOne.textContent)) {
+    firstNum.push(obj);
+}
+
+calcSpanTwo.textContent = 'enter operator';
+operator = calcSpanTwo.textContent;
+
+calcSpanThree.textContent = 'enter second num';
+for(const obj of Array.from(calcSpanThree.textContent)) {
+    secondNum.push(obj);
+}
+*/
 
 buttonContainer.addEventListener('mouseover', hoverOn);
 buttonContainer.addEventListener('mouseleave', hoverOff);
